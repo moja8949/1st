@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Morse Printer</title>
+
+  <!-- Pretendard (기본 폰트) -->
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+
+  <!-- Maxi Round (로컬 .otf 적용) -->
+  <style>
+    @font-face {
+      font-family: 'Maxi Round';
+      src: url('fonts/MaxiRound-Thin.otf') format('opentype');
+      font-weight: normal;
+      font-style: normal;
+    }
+  </style>
+
+  <style>
+    body {
+      background-color: #fefefe;
+      background-image: url('https://www.transparenttextures.com/patterns/paper-fibers.png');
+      background-repeat: repeat;
+      background-size: auto;
+      font-family: 'Pretendard', sans-serif;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 800px;
+      padding: 20px;
+      margin-top: 120px;
+    }
+
+    #typing-text {
+      font-family: 'Maxi Round', sans-serif;
+      font-size: 26px;
+      font-weight: 400;
+      margin-bottom: 50px;
+      white-space: nowrap;
+      overflow: hidden;
+      width: 0;
+      visibility: hidden;
+      position: relative;
+      animation: typing 3s steps(28, end) forwards;
+      animation-delay: 3.3s;
+    }
+
+    #typing-text::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: black;
+      animation: blink 0.7s steps(1) infinite;
+    }
+
+    @keyframes typing {
+      from { width: 0; visibility: visible; }
+      to { width: 400px; visibility: visible; }
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    #wordmark {
+      width: 850px;
+      opacity: 0;
+      transform: translateY(-800px);
+      animation: dropFade 2.5s ease-out forwards;
+      animation-delay: 1s;
+    }
+
+    @keyframes dropFade {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideInLeft {
+      from {
+        transform: translateX(-150%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideInRight {
+      from {
+        transform: translateX(150%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    input {
+      font-size: 24px;
+      padding: 12px;
+      width: 200%;
+      max-width: 1200px;
+      border: none;
+      border-bottom: 2px solid black;
+      outline: none;
+      text-align: center;
+      background: transparent;
+      animation: slideInLeft 1.6s ease-out forwards;
+      animation-delay: 0s;
+      opacity: 0;
+      margin-top: 60px;
+    }
+
+    button {
+      font-family: 'Maxi Round', sans-serif;
+      font-size: 36px;
+      background: none;
+      border: 3px solid black;
+      border-radius: 40px;
+      cursor: pointer;
+      padding: 8px 120px;
+      animation: slideInRight 1.6s ease-out forwards;
+      animation-delay: 0s;
+      opacity: 0;
+      margin-top: 60px;
+    }
+
+    #status {
+      margin-top: 20px;
+      font-size: 16px;
+      color: gray;
+      white-space: pre-line;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="typing-text">Language turns into a morse code.</div>
+    <img id="wordmark" src="images/ddd-wordmark.png" alt="Wordmark" />
+    <input id="textInput" type="text" placeholder="" />
+    <button onclick="sendText()">Print</button>
+    <div id="status"></div>
+  </div>
+
+  <script>
+    async function sendText() {
+      const input = document.getElementById("textInput").value;
+      if (!input.trim()) {
+        document.getElementById("status").innerText = "⚠️ 입력값이 비어 있습니다.";
+        return;
+      }
+
+      try {
+        const res = await fetch("/print", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: input })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById("status").innerText =
+            `✅ 전송 성공\n모스부호: ${data.morse}`;
+        } else {
+          document.getElementById("status").innerText = `❌ 오류: ${data.error}`;
+        }
+      } catch (err) {
+        document.getElementById("status").innerText = "❌ 서버 연결 실패!";
+      }
+    }
+  </script>
+</body>
+</html>
